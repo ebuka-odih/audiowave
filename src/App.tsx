@@ -55,9 +55,16 @@ type ConsultationFormState = {
   message: string;
 };
 
+type SelectedProductPayload = {
+  name: string;
+  token: number;
+};
+
 const PRODUCT_STORAGE_KEY = 'audiowerkhaus-products';
 const REQUEST_STORAGE_KEY = 'audiowerkhaus-consultation-requests';
 const DEFAULT_INTEREST = 'The Monolith';
+const FALLBACK_PRODUCT_IMAGE =
+  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=1200';
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
@@ -140,6 +147,8 @@ const EMPTY_CONSULTATION_FORM: ConsultationFormState = {
   interest: DEFAULT_INTEREST,
   message: '',
 };
+
+const resolveProductImage = (image: string) => image || FALLBACK_PRODUCT_IMAGE;
 
 const readStoredProducts = (): Product[] => {
   const stored = window.localStorage.getItem(PRODUCT_STORAGE_KEY);
@@ -447,7 +456,7 @@ const Catalog = ({
             >
               <div className="aspect-[4/5] overflow-hidden">
                 <img
-                  src={item.image}
+                  src={resolveProductImage(item.image)}
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                   referrerPolicy="no-referrer"
@@ -465,7 +474,7 @@ const Catalog = ({
                   >
                     {item.name}
                   </button>
-                  <span className="text-[10px] font-mono text-white/40 shrink-0">{item.weight}</span>
+                  <span className="text-[10px] font-mono text-white/40 shrink-0">{item.weight || 'Custom Spec'}</span>
                 </div>
                 <p className="text-white/40 text-[10px] md:text-xs mb-6 line-clamp-2">{item.description}</p>
                 <div className="flex items-center justify-between">
@@ -541,7 +550,7 @@ const Contact = ({
   onUpdate,
   onDelete,
 }: {
-  selectedProduct: string;
+  selectedProduct: SelectedProductPayload | null;
   requests: ConsultationRequest[];
   onCreate: (request: ConsultationFormState) => void;
   onUpdate: (id: string, request: ConsultationFormState) => void;
@@ -552,21 +561,23 @@ const Contact = ({
   const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    if (!selectedProduct) return;
+    if (!selectedProduct?.name) return;
 
     setFormState((current) => {
-      const nextMessage = current.message.includes(selectedProduct)
+      const nextMessage = current.message.includes(selectedProduct.name)
         ? current.message
-        : `I'm interested in ${selectedProduct}.${current.message ? ` ${current.message}` : ''}`;
+        : `I'm interested in ${selectedProduct.name}.${current.message ? ` ${current.message}` : ''}`;
 
       return {
         ...current,
-        interest: selectedProduct,
+        interest: selectedProduct.name,
         message: nextMessage,
       };
     });
 
-    setStatusMessage(`Prepared consultation request for ${selectedProduct}.`);
+    setStatusMessage(`Prepared consultation request for ${selectedProduct.name}.`);
+
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [selectedProduct]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -582,7 +593,7 @@ const Contact = ({
 
     setFormState({
       ...EMPTY_CONSULTATION_FORM,
-      interest: selectedProduct || DEFAULT_INTEREST,
+      interest: selectedProduct?.name || DEFAULT_INTEREST,
     });
     setEditingId(null);
   };
@@ -605,7 +616,7 @@ const Contact = ({
       setEditingId(null);
       setFormState({
         ...EMPTY_CONSULTATION_FORM,
-        interest: selectedProduct || DEFAULT_INTEREST,
+        interest: selectedProduct?.name || DEFAULT_INTEREST,
       });
     }
 
@@ -673,8 +684,8 @@ const Contact = ({
                 <option value="The Monolith">Interested in: The Monolith</option>
                 <option value="Heavy Collection">Interested in: Heavy Collection</option>
                 <option value="Custom Build">Interested in: Custom Build</option>
-                {selectedProduct && !['The Monolith', 'Heavy Collection', 'Custom Build'].includes(selectedProduct) ? (
-                  <option value={selectedProduct}>Interested in: {selectedProduct}</option>
+                {selectedProduct?.name && !['The Monolith', 'Heavy Collection', 'Custom Build'].includes(selectedProduct.name) ? (
+                  <option value={selectedProduct.name}>Interested in: {selectedProduct.name}</option>
                 ) : null}
               </select>
               <textarea
@@ -850,10 +861,9 @@ const AdminPage = ({
                   <input
                     type="text"
                     className="w-full bg-black/40 border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors"
-                    placeholder="Weight"
+                    placeholder="Weight (optional)"
                     value={formState.weight}
                     onChange={(event) => setFormState({ ...formState, weight: event.target.value })}
-                    required
                   />
                 </div>
 
@@ -869,7 +879,7 @@ const AdminPage = ({
                   <input
                     type="url"
                     className="w-full bg-black/40 border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors"
-                    placeholder="Image URL"
+                    placeholder="Image URL (optional)"
                     value={formState.image.startsWith('data:') ? '' : formState.image}
                     onChange={(event) => setFormState({ ...formState, image: event.target.value })}
                   />
@@ -887,7 +897,7 @@ const AdminPage = ({
                   <label className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer">
                     <div>
                       <p className="text-sm font-semibold text-white">Upload Product Image</p>
-                      <p className="text-xs text-white/40">Select a local file to store directly in the catalog entry.</p>
+                      <p className="text-xs text-white/40">Select a local file to store directly in the catalog entry, or leave it blank to use the default image.</p>
                     </div>
                     <span className="px-4 py-3 border border-white/10 text-[10px] uppercase font-bold tracking-widest text-white/70">
                       Choose File
@@ -897,9 +907,13 @@ const AdminPage = ({
 
                   {formState.image ? (
                     <div className="mt-5 overflow-hidden rounded-sm border border-white/10">
-                      <img src={formState.image} alt="Product preview" className="w-full h-56 object-cover" />
+                      <img src={resolveProductImage(formState.image)} alt="Product preview" className="w-full h-56 object-cover" />
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="mt-5 overflow-hidden rounded-sm border border-white/10">
+                      <img src={FALLBACK_PRODUCT_IMAGE} alt="Default product preview" className="w-full h-56 object-cover opacity-70" />
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-[10px] font-mono uppercase tracking-widest text-white/40">{statusMessage}</p>
@@ -941,13 +955,15 @@ const AdminPage = ({
                 {products.map((product) => (
                   <div key={product.id} className="border border-white/5 bg-black/30 rounded-sm overflow-hidden">
                     <div className="h-40 bg-black/40">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      <img src={resolveProductImage(product.image)} alt={product.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div>
                           <h3 className="text-lg font-semibold">{product.name}</h3>
-                          <p className="text-xs text-white/40">{product.weight} · {product.price}</p>
+                          <p className="text-xs text-white/40">
+                            {product.weight || 'Custom Spec'} · {product.price}
+                          </p>
                         </div>
                       </div>
                       <p className="text-sm text-white/40 leading-relaxed">{product.description}</p>
@@ -1013,10 +1029,13 @@ const PublicSite = ({
   onUpdateRequest: (id: string, request: ConsultationFormState) => void;
   onDeleteRequest: (id: string) => void;
 }) => {
-  const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<SelectedProductPayload | null>(null);
 
   const handleSelectProduct = (productName: string) => {
-    setSelectedProduct(productName);
+    setSelectedProduct({
+      name: productName,
+      token: Date.now(),
+    });
     window.location.hash = 'contact';
   };
 
