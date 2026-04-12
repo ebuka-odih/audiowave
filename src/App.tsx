@@ -203,9 +203,7 @@ const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
         <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm">
           <Music className="text-black w-5 h-5" />
         </div>
-        <span className="font-sans font-bold tracking-tighter text-lg md:text-xl uppercase">
-          AudioWerkhaus {isAdmin ? 'Admin' : ''}
-        </span>
+        <span className="font-sans font-bold tracking-tighter text-lg md:text-xl uppercase">AudioWerkhaus</span>
       </div>
 
       <div className="hidden md:flex items-center gap-8 text-[10px] font-medium uppercase tracking-widest text-white/60">
