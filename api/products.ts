@@ -1,4 +1,4 @@
-import { ensureSchema, pool } from './_db.ts';
+import { ensureSchema, getPool } from './_db';
 
 const parseBody = (req: any) => {
   if (!req.body) return {};
@@ -19,6 +19,7 @@ const send = (res: any, status: number, payload: unknown) => {
 export default async function handler(req: any, res: any) {
   try {
     await ensureSchema();
+    const pool = getPool();
 
     if (req.method === 'GET') {
       const result = await pool.query(

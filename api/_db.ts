@@ -5,30 +5,35 @@ const globalForDb = globalThis as typeof globalThis & {
   audiowerkhausSchemaReady?: Promise<void>;
 };
 
-const connectionString = process.env.DATABASE_URL;
-const sslMode = (process.env.DATABASE_SSL || 'false').toLowerCase();
+const getConnectionConfig = () => {
+  const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not configured.');
-}
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
 
-export const pool =
-  globalForDb.audiowerkhausPool ??
-  new Pool({
+  const sslMode = (process.env.DATABASE_SSL || 'false').toLowerCase();
+
+  return {
     connectionString,
     ssl:
       sslMode === 'true' || sslMode === 'require'
         ? { rejectUnauthorized: false }
         : false,
-  });
+  };
+};
 
-if (!globalForDb.audiowerkhausPool) {
-  globalForDb.audiowerkhausPool = pool;
-}
+export const getPool = () => {
+  if (!globalForDb.audiowerkhausPool) {
+    globalForDb.audiowerkhausPool = new Pool(getConnectionConfig());
+  }
+
+  return globalForDb.audiowerkhausPool;
+};
 
 export const ensureSchema = () => {
   globalForDb.audiowerkhausSchemaReady ??= (async () => {
-    const client = await pool.connect();
+    const client = await getPool().connect();
 
     try {
       await client.query('BEGIN');
@@ -61,6 +66,7 @@ export const ensureSchema = () => {
 
       await client.query('COMMIT');
     } catch (error) {
+      globalForDb.audiowerkhausSchemaReady = undefined;
       await client.query('ROLLBACK');
       throw error;
     } finally {
