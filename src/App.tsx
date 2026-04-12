@@ -12,8 +12,6 @@ import {
   ArrowRight,
   Play,
   Pause,
-  Menu,
-  X,
   ImagePlus,
   Pencil,
   Trash2,
@@ -60,8 +58,6 @@ type SelectedProductPayload = {
   token: number;
 };
 
-const PRODUCT_STORAGE_KEY = 'audiowerkhaus-products';
-const REQUEST_STORAGE_KEY = 'audiowerkhaus-consultation-requests';
 const DEFAULT_INTEREST = 'The Monolith';
 const FALLBACK_PRODUCT_IMAGE =
   'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=1200';
@@ -150,53 +146,119 @@ const EMPTY_CONSULTATION_FORM: ConsultationFormState = {
 
 const resolveProductImage = (image: string) => image || FALLBACK_PRODUCT_IMAGE;
 
-const readStoredProducts = (): Product[] => {
-  const stored = window.localStorage.getItem(PRODUCT_STORAGE_KEY);
-  if (!stored) return DEFAULT_PRODUCTS;
-
+const getErrorMessage = async (response: Response) => {
   try {
-    const parsed = JSON.parse(stored) as Product[];
-    return parsed.length > 0 ? parsed : DEFAULT_PRODUCTS;
+    const payload = (await response.json()) as { error?: string };
+    return payload.error || 'Request failed.';
   } catch {
-    window.localStorage.removeItem(PRODUCT_STORAGE_KEY);
-    return DEFAULT_PRODUCTS;
+    return 'Request failed.';
   }
 };
 
-const readStoredRequests = (): ConsultationRequest[] => {
-  const stored = window.localStorage.getItem(REQUEST_STORAGE_KEY);
-  if (!stored) return [];
-
-  try {
-    return JSON.parse(stored) as ConsultationRequest[];
-  } catch {
-    window.localStorage.removeItem(REQUEST_STORAGE_KEY);
-    return [];
-  }
+const fetchProducts = async () => {
+  const response = await fetch('/api/products');
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { products: Product[] };
+  return payload.products;
 };
 
-const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const createProduct = async (product: ProductFormState) => {
+  const response = await fetch('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(product),
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { product: Product };
+  return payload.product;
+};
 
-  useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : 'unset';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMenuOpen]);
+const updateProduct = async (id: string, product: ProductFormState) => {
+  const response = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(product),
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { product: Product };
+  return payload.product;
+};
 
-  const navLinks = isAdmin
-    ? [
-        { name: 'Catalog Admin', href: '#admin-products' },
-        { name: 'Uploads', href: '#admin-upload' },
-        { name: 'Live Site', href: '/' },
-      ]
-    : [
-        { name: 'The Monolith', href: '#instrument' },
-        { name: 'Sound Profile', href: '#sound' },
-        { name: 'Heavy Catalog', href: '#catalog' },
-      ];
+const deleteProduct = async (id: string) => {
+  const response = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+};
 
+const fetchConsultationRequests = async () => {
+  const response = await fetch('/api/consultation-requests');
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { requests: ConsultationRequest[] };
+  return payload.requests;
+};
+
+const createConsultationRequest = async (request: ConsultationFormState) => {
+  const response = await fetch('/api/consultation-requests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { request: ConsultationRequest };
+  return payload.request;
+};
+
+const updateConsultationRequest = async (id: string, request: ConsultationFormState) => {
+  const response = await fetch(`/api/consultation-requests?id=${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const payload = (await response.json()) as { request: ConsultationRequest };
+  return payload.request;
+};
+
+const deleteConsultationRequest = async (id: string) => {
+  const response = await fetch(`/api/consultation-requests?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+};
+
+const isNotFoundRoute = (path: string) => {
+  if (path === '/' || path === '/admin') return false;
+  if (path.startsWith('/api/')) return false;
+  return true;
+};
+
+const navigateTo = (path: string) => {
+  window.history.pushState({}, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+};
+
+const formatActionError = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+};
+
+const readUrlPath = () => {
+  const path = window.location.pathname || '/';
+  return isNotFoundRoute(path) ? '/' : path;
+};
+
+const goToAnchor = (anchor: string) => {
+  const element = document.getElementById(anchor);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  window.location.hash = anchor;
+};
+
+const Navbar = (_: { isAdmin: boolean }) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-6 md:px-8 py-5 md:py-6 bg-black/80 backdrop-blur-xl border-b border-white/5">
       <div className="flex items-center gap-2 relative z-[110]">
@@ -205,74 +267,6 @@ const Navbar = ({ isAdmin }: { isAdmin: boolean }) => {
         </div>
         <span className="font-sans font-bold tracking-tighter text-lg md:text-xl uppercase">AudioWerkhaus</span>
       </div>
-
-      <div className="hidden md:flex items-center gap-8 text-[10px] font-medium uppercase tracking-widest text-white/60">
-        {navLinks.map((link) => (
-          <a key={link.name} href={link.href} className="hover:text-white transition-colors">
-            {link.name}
-          </a>
-        ))}
-        <a
-          href={isAdmin ? '/' : '/admin'}
-          className="px-4 py-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all"
-        >
-          {isAdmin ? 'View Site' : 'Admin'}
-        </a>
-      </div>
-
-      <button
-        className="md:hidden relative z-[110] p-2 text-white"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        aria-label="Toggle Menu"
-      >
-        {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
-
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black z-[105] md:hidden"
-          >
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-y-0 right-0 w-full bg-zinc-950 border-l border-white/5 flex flex-col p-8 pt-32"
-            >
-              <div className="flex flex-col gap-6">
-                {navLinks.map((link, idx) => (
-                  <motion.a
-                    key={link.name}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.1 }}
-                    href={link.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-4xl font-bold uppercase tracking-tighter hover:text-white/60 transition-colors border-b border-white/5 pb-4"
-                  >
-                    {link.name}
-                  </motion.a>
-                ))}
-                <motion.a
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                  href={isAdmin ? '/' : '/admin'}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="mt-8 text-xl font-bold uppercase tracking-widest text-white flex items-center gap-4"
-                >
-                  {isAdmin ? 'View Site' : 'Admin'} <ArrowRight className="w-6 h-6" />
-                </motion.a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </nav>
   );
 };
@@ -550,9 +544,9 @@ const Contact = ({
 }: {
   selectedProduct: SelectedProductPayload | null;
   requests: ConsultationRequest[];
-  onCreate: (request: ConsultationFormState) => void;
-  onUpdate: (id: string, request: ConsultationFormState) => void;
-  onDelete: (id: string) => void;
+  onCreate: (request: ConsultationFormState) => Promise<void>;
+  onUpdate: (id: string, request: ConsultationFormState) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }) => {
   const [formState, setFormState] = useState<ConsultationFormState>(EMPTY_CONSULTATION_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -578,22 +572,26 @@ const Contact = ({
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [selectedProduct]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (editingId) {
-      onUpdate(editingId, formState);
-      setStatusMessage('Consultation request updated.');
-    } else {
-      onCreate(formState);
-      setStatusMessage('Consultation request saved.');
-    }
+    try {
+      if (editingId) {
+        await onUpdate(editingId, formState);
+        setStatusMessage('Consultation request updated.');
+      } else {
+        await onCreate(formState);
+        setStatusMessage('Consultation request sent.');
+      }
 
-    setFormState({
-      ...EMPTY_CONSULTATION_FORM,
-      interest: selectedProduct?.name || DEFAULT_INTEREST,
-    });
-    setEditingId(null);
+      setFormState({
+        ...EMPTY_CONSULTATION_FORM,
+        interest: selectedProduct?.name || DEFAULT_INTEREST,
+      });
+      setEditingId(null);
+    } catch (error) {
+      setStatusMessage(formatActionError(error, 'Unable to save consultation request.'));
+    }
   };
 
   const handleEdit = (request: ConsultationRequest) => {
@@ -607,18 +605,22 @@ const Contact = ({
     setStatusMessage(`Editing request for ${request.interest}.`);
   };
 
-  const handleDelete = (id: string) => {
-    onDelete(id);
+  const handleDelete = async (id: string) => {
+    try {
+      await onDelete(id);
 
-    if (editingId === id) {
-      setEditingId(null);
-      setFormState({
-        ...EMPTY_CONSULTATION_FORM,
-        interest: selectedProduct?.name || DEFAULT_INTEREST,
-      });
+      if (editingId === id) {
+        setEditingId(null);
+        setFormState({
+          ...EMPTY_CONSULTATION_FORM,
+          interest: selectedProduct?.name || DEFAULT_INTEREST,
+        });
+      }
+
+      setStatusMessage('Consultation request deleted.');
+    } catch (error) {
+      setStatusMessage(formatActionError(error, 'Unable to delete consultation request.'));
     }
-
-    setStatusMessage('Consultation request deleted.');
   };
 
   return (
@@ -762,9 +764,9 @@ const AdminPage = ({
   onDeleteProduct,
 }: {
   products: Product[];
-  onCreateProduct: (product: ProductFormState) => void;
-  onUpdateProduct: (id: string, product: ProductFormState) => void;
-  onDeleteProduct: (id: string) => void;
+  onCreateProduct: (product: ProductFormState) => Promise<void>;
+  onUpdateProduct: (id: string, product: ProductFormState) => Promise<void>;
+  onDeleteProduct: (id: string) => Promise<void>;
 }) => {
   const [formState, setFormState] = useState<ProductFormState>(EMPTY_PRODUCT_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -787,19 +789,23 @@ const AdminPage = ({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (editingId) {
-      onUpdateProduct(editingId, formState);
-      setStatusMessage('Product updated in the live catalog.');
-    } else {
-      onCreateProduct(formState);
-      setStatusMessage('Product added to the live catalog.');
-    }
+    try {
+      if (editingId) {
+        await onUpdateProduct(editingId, formState);
+        setStatusMessage('Product updated in the live catalog.');
+      } else {
+        await onCreateProduct(formState);
+        setStatusMessage('Product added to the live catalog.');
+      }
 
-    setEditingId(null);
-    setFormState(EMPTY_PRODUCT_FORM);
+      setEditingId(null);
+      setFormState(EMPTY_PRODUCT_FORM);
+    } catch (error) {
+      setStatusMessage(formatActionError(error, 'Unable to save product.'));
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -814,13 +820,17 @@ const AdminPage = ({
     setStatusMessage(`Editing ${product.name}.`);
   };
 
-  const handleDelete = (id: string) => {
-    onDeleteProduct(id);
-    if (editingId === id) {
-      setEditingId(null);
-      setFormState(EMPTY_PRODUCT_FORM);
+  const handleDelete = async (id: string) => {
+    try {
+      await onDeleteProduct(id);
+      if (editingId === id) {
+        setEditingId(null);
+        setFormState(EMPTY_PRODUCT_FORM);
+      }
+      setStatusMessage('Product removed from the live catalog.');
+    } catch (error) {
+      setStatusMessage(formatActionError(error, 'Unable to delete product.'));
     }
-    setStatusMessage('Product removed from the live catalog.');
   };
 
   return (
@@ -1023,9 +1033,9 @@ const PublicSite = ({
 }: {
   products: Product[];
   requests: ConsultationRequest[];
-  onCreateRequest: (request: ConsultationFormState) => void;
-  onUpdateRequest: (id: string, request: ConsultationFormState) => void;
-  onDeleteRequest: (id: string) => void;
+  onCreateRequest: (request: ConsultationFormState) => Promise<void>;
+  onUpdateRequest: (id: string, request: ConsultationFormState) => Promise<void>;
+  onDeleteRequest: (id: string) => Promise<void>;
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<SelectedProductPayload | null>(null);
 
@@ -1034,7 +1044,7 @@ const PublicSite = ({
       name: productName,
       token: Date.now(),
     });
-    window.location.hash = 'contact';
+    goToAnchor('contact');
   };
 
   return (
@@ -1056,62 +1066,68 @@ const PublicSite = ({
 };
 
 export default function App() {
-  const [pathname, setPathname] = useState(window.location.pathname);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [pathname, setPathname] = useState(readUrlPath());
+  const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
   const [requests, setRequests] = useState<ConsultationRequest[]>([]);
 
   useEffect(() => {
-    setProducts(readStoredProducts());
-    setRequests(readStoredRequests());
+    let isMounted = true;
 
-    const handlePopState = () => setPathname(window.location.pathname);
+    const loadData = async () => {
+      try {
+        const [nextProducts, nextRequests] = await Promise.all([
+          fetchProducts(),
+          fetchConsultationRequests(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (nextProducts.length > 0) {
+          setProducts(nextProducts);
+        }
+        setRequests(nextRequests);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    void loadData();
+
+    const handlePopState = () => setPathname(readUrlPath());
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
 
-  useEffect(() => {
-    if (products.length === 0) return;
-    window.localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    window.localStorage.setItem(REQUEST_STORAGE_KEY, JSON.stringify(requests));
-  }, [requests]);
-
-  const handleCreateProduct = (product: ProductFormState) => {
-    setProducts((current) => [
-      {
-        id: crypto.randomUUID(),
-        ...product,
-      },
-      ...current,
-    ]);
+  const handleCreateProduct = async (product: ProductFormState) => {
+    const created = await createProduct(product);
+    setProducts((current) => [created, ...current]);
   };
 
-  const handleUpdateProduct = (id: string, product: ProductFormState) => {
-    setProducts((current) => current.map((item) => (item.id === id ? { ...item, ...product } : item)));
+  const handleUpdateProduct = async (id: string, product: ProductFormState) => {
+    const updated = await updateProduct(id, product);
+    setProducts((current) => current.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
+    await deleteProduct(id);
     setProducts((current) => current.filter((item) => item.id !== id));
   };
 
-  const handleCreateRequest = (request: ConsultationFormState) => {
-    setRequests((current) => [
-      {
-        id: crypto.randomUUID(),
-        ...request,
-        createdAt: new Date().toISOString(),
-      },
-      ...current,
-    ]);
+  const handleCreateRequest = async (request: ConsultationFormState) => {
+    const created = await createConsultationRequest(request);
+    setRequests((current) => [created, ...current]);
   };
 
-  const handleUpdateRequest = (id: string, request: ConsultationFormState) => {
-    setRequests((current) => current.map((item) => (item.id === id ? { ...item, ...request } : item)));
+  const handleUpdateRequest = async (id: string, request: ConsultationFormState) => {
+    const updated = await updateConsultationRequest(id, request);
+    setRequests((current) => current.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleDeleteRequest = (id: string) => {
+  const handleDeleteRequest = async (id: string) => {
+    await deleteConsultationRequest(id);
     setRequests((current) => current.filter((item) => item.id !== id));
   };
 
@@ -1128,7 +1144,7 @@ export default function App() {
 
   return (
     <PublicSite
-      products={products.length > 0 ? products : DEFAULT_PRODUCTS}
+      products={products}
       requests={requests}
       onCreateRequest={handleCreateRequest}
       onUpdateRequest={handleUpdateRequest}
