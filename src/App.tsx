@@ -798,6 +798,12 @@ const AdminPage = ({
             <p className="max-w-2xl text-sm md:text-lg text-white/60 font-light leading-relaxed">
               Upload product imagery, create new entries, and manage the catalog that powers the live site slider. Everything stays serverless and persists in the browser.
             </p>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 mt-8 px-6 py-3 border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
+            >
+              Visit Site <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10">
