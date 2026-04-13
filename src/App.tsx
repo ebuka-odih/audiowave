@@ -1019,18 +1019,11 @@ const AdminPage = ({
 const Footer = () => (
   <footer className="py-12 bg-black border-t border-white/5 px-6 md:px-8">
     <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-white/20 flex items-center justify-center rounded-sm">
-            <Music className="text-white w-4 h-4" />
-          </div>
-          <span className="font-sans font-bold tracking-tighter text-sm uppercase">AudioWerkhaus</span>
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 bg-white/20 flex items-center justify-center rounded-sm">
+          <Music className="text-white w-4 h-4" />
         </div>
-        <div className="space-y-2 text-[10px] font-mono uppercase tracking-widest text-white/30">
-          <div>Germany: +49 178 3640921</div>
-          <div>Korea: +82 10 5557 0582</div>
-          <div>USA: +1 669 362 1974</div>
-        </div>
+        <span className="font-sans font-bold tracking-tighter text-sm uppercase">AudioWerkhaus</span>
       </div>
       <div className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8 text-[10px] font-mono uppercase tracking-widest text-white/20">
         <a href="#" className="hover:text-white transition-colors">Privacy</a>
