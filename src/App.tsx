@@ -63,68 +63,12 @@ const FALLBACK_PRODUCT_IMAGE =
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
-    id: 'grand-piano',
-    name: 'Imperial Concert Grand',
-    weight: '480kg',
-    description: 'Hand-crafted spruce soundboard with custom carbon-fiber action.',
-    price: '$120,000',
-    image: 'https://images.unsplash.com/photo-1520529611124-d4c909a22840?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'pipe-organ',
-    name: 'Cathedral Series V',
-    weight: '1,200kg',
-    description: 'Modular pipe organ system with digital-analog hybrid console.',
-    price: '$250,000',
-    image: 'https://images.unsplash.com/photo-1518911710364-17ec553bde5d?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'industrial-drums',
-    name: 'Titanium Shell Kit',
-    weight: '85kg',
-    description: 'Solid titanium shells for unparalleled projection and durability.',
-    price: '$15,000',
-    image: 'https://images.unsplash.com/photo-1543443374-b6fe10a6ab7b?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'double-bass',
-    name: 'The Goliath Bass',
-    weight: '12kg',
-    description: 'Oversized acoustic double bass with built-in sub-harmonic resonance.',
-    price: '$28,000',
-    image: 'https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'concert-harp',
-    name: 'Aura Gold Harp',
-    weight: '38kg',
-    description: '47-string concert grand harp with 24k gold leaf finish and carbon soundboard.',
-    price: '$45,000',
-    image: 'https://images.unsplash.com/photo-1573511111556-9d3298863678?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'marimba',
-    name: 'Rosewood Marimba',
-    weight: '95kg',
-    description: '5-octave professional marimba with selected Honduras Rosewood bars.',
-    price: '$22,000',
-    image: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'cello',
-    name: 'Master Cello 1712',
-    weight: '3kg',
-    description: 'A replica of the 1712 Stradivarius, crafted from 100-year-old maple.',
-    price: '$65,000',
-    image: 'https://images.unsplash.com/photo-1588534510807-86dfb5ed5d59?auto=format&fit=crop&q=80&w=800',
-  },
-  {
-    id: 'tuba',
-    name: 'Silver Contrabass Tuba',
-    weight: '15kg',
-    description: 'Professional 5-valve contrabass tuba with silver plating and custom bore.',
-    price: '$18,500',
-    image: 'https://images.unsplash.com/photo-1573871666457-7c7329118cf9?auto=format&fit=crop&q=80&w=800',
+    id: 'sample-reference-piece',
+    name: 'Reference Listening Piece',
+    weight: '',
+    description: 'A single placeholder product for testing the catalog before real inventory is added.',
+    price: '$0',
+    image: FALLBACK_PRODUCT_IMAGE,
   },
 ];
 
@@ -652,7 +596,7 @@ const Contact = ({
               </div>
               <div className="flex items-center gap-4 text-white/60">
                 <MapPin className="w-5 h-5 shrink-0" />
-                <span className="text-sm">Berlin / New York / Tokyo</span>
+                <span className="text-sm">Berlin / California / Tokyo</span>
               </div>
             </div>
           </div>
@@ -1014,14 +958,21 @@ const AdminPage = ({
 
 const Footer = () => (
   <footer className="py-12 bg-black border-t border-white/5 px-6 md:px-8">
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-      <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-white/20 flex items-center justify-center rounded-sm">
-          <Music className="text-white w-4 h-4" />
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-white/20 flex items-center justify-center rounded-sm">
+            <Music className="text-white w-4 h-4" />
+          </div>
+          <span className="font-sans font-bold tracking-tighter text-sm uppercase">AudioWerkhaus</span>
         </div>
-        <span className="font-sans font-bold tracking-tighter text-sm uppercase">AudioWerkhaus</span>
+        <div className="space-y-2 text-[10px] font-mono uppercase tracking-widest text-white/30">
+          <div>Germany: +49 178 3640921</div>
+          <div>Tokyo / Korea: +82 10 5557 0582</div>
+          <div>USA: +1 669 362 1974</div>
+        </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-[10px] font-mono uppercase tracking-widest text-white/20">
+      <div className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8 text-[10px] font-mono uppercase tracking-widest text-white/20">
         <a href="#" className="hover:text-white transition-colors">Privacy</a>
         <a href="#" className="hover:text-white transition-colors">Terms</a>
         <a href="#" className="hover:text-white transition-colors">Shipping</a>
