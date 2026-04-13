@@ -968,7 +968,7 @@ const Footer = () => (
         </div>
         <div className="space-y-2 text-[10px] font-mono uppercase tracking-widest text-white/30">
           <div>Germany: +49 178 3640921</div>
-          <div>Tokyo / Korea: +82 10 5557 0582</div>
+          <div>Korea: +82 10 5557 0582</div>
           <div>USA: +1 669 362 1974</div>
         </div>
       </div>
