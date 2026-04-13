@@ -1,4 +1,4 @@
-import { ensureSchema, getPool } from './_db';
+import { ensureSchema, getPool } from './_db.js';
 
 const parseBody = (req: any) => {
   if (!req.body) return {};
