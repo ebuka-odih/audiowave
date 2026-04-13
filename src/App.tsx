@@ -892,7 +892,7 @@ const AdminPage = ({
                     required
                   />
                   <input
-                    type="url"
+                    type="text"
                     className="w-full bg-black/40 border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors"
                     placeholder="Image URL (optional)"
                     value={formState.image.startsWith('data:') ? '' : formState.image}
@@ -934,7 +934,7 @@ const AdminPage = ({
                 <p className="text-[10px] font-mono uppercase tracking-widest text-white/40">{statusMessage}</p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-white/90 transition-all flex items-center justify-center gap-2">
+                  <button type="submit" className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-white/90 transition-all flex items-center justify-center gap-2">
                     {editingId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                     {editingId ? 'Update Product' : 'Add Product'}
                   </button>
@@ -1077,15 +1077,22 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
   const [requests, setRequests] = useState<ConsultationRequest[]>([]);
 
+  const reloadProducts = async () => {
+    const nextProducts = await fetchProducts();
+    setProducts(nextProducts);
+  };
+
+  const reloadRequests = async () => {
+    const nextRequests = await fetchConsultationRequests();
+    setRequests(nextRequests);
+  };
+
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
       try {
-        const [nextProducts, nextRequests] = await Promise.all([
-          fetchProducts(),
-          fetchConsultationRequests(),
-        ]);
+        const [nextProducts, nextRequests] = await Promise.all([fetchProducts(), fetchConsultationRequests()]);
 
         if (!isMounted) return;
 
@@ -1109,33 +1116,33 @@ export default function App() {
   }, []);
 
   const handleCreateProduct = async (product: ProductFormState) => {
-    const created = await createProduct(product);
-    setProducts((current) => [created, ...current]);
+    await createProduct(product);
+    await reloadProducts();
   };
 
   const handleUpdateProduct = async (id: string, product: ProductFormState) => {
-    const updated = await updateProduct(id, product);
-    setProducts((current) => current.map((item) => (item.id === id ? updated : item)));
+    await updateProduct(id, product);
+    await reloadProducts();
   };
 
   const handleDeleteProduct = async (id: string) => {
     await deleteProduct(id);
-    setProducts((current) => current.filter((item) => item.id !== id));
+    await reloadProducts();
   };
 
   const handleCreateRequest = async (request: ConsultationFormState) => {
-    const created = await createConsultationRequest(request);
-    setRequests((current) => [created, ...current]);
+    await createConsultationRequest(request);
+    await reloadRequests();
   };
 
   const handleUpdateRequest = async (id: string, request: ConsultationFormState) => {
-    const updated = await updateConsultationRequest(id, request);
-    setRequests((current) => current.map((item) => (item.id === id ? updated : item)));
+    await updateConsultationRequest(id, request);
+    await reloadRequests();
   };
 
   const handleDeleteRequest = async (id: string) => {
     await deleteConsultationRequest(id);
-    setRequests((current) => current.filter((item) => item.id !== id));
+    await reloadRequests();
   };
 
   if (pathname === '/admin') {
