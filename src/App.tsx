@@ -215,61 +215,87 @@ const Navbar = (_: { isAdmin: boolean }) => {
   );
 };
 
-const Hero = () => (
-  <section id="instrument" className="relative min-h-screen flex flex-col items-center justify-center pt-20 overflow-hidden">
-    <div className="absolute inset-0 z-0">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-10" />
-      <img
-        src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&q=80&w=2000"
-        alt="Dark Studio"
-        className="w-full h-full object-cover opacity-40"
-        referrerPolicy="no-referrer"
-      />
-    </div>
+const Hero = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-    <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-8 text-center">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-        <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.5em] text-white/40 mb-4 block text-center">
-          Precision Sound, Built With Intent
-        </span>
-        <h1 className="text-5xl sm:text-7xl md:text-9xl font-sans font-bold tracking-tighter leading-[0.9] mb-8 text-center">
-          THE <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/20">OBSIDIAN</span> <br />
-          MONOLITH
-        </h1>
-        <p className="max-w-xl mx-auto text-sm md:text-lg text-white/60 font-light leading-relaxed mb-12 text-center px-4">
-          A flagship listening system shaped for studios, private rooms, and performance spaces that demand clarity, depth, and presence.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6">
-          <a
-            href="#contact"
-            className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/90 transition-all flex items-center justify-center gap-2"
-          >
-            Inquire Now <ArrowRight className="w-4 h-4" />
-          </a>
-          <a
-            href="https://youtube.com/shorts/a3aDBQvahB4?si=3Coio0bBOLSRJPrx"
-            target="_blank"
-            rel="noreferrer"
-            className="w-full sm:w-auto px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/5 transition-all flex items-center justify-center gap-2"
-          >
-            Watch Performance <Play className="w-4 h-4 fill-current" />
-          </a>
+  return (
+    <section id="instrument" className="relative min-h-screen flex flex-col items-center justify-center pt-20 overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-10" />
+        <img
+          src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&q=80&w=2000"
+          alt="Dark Studio"
+          className="w-full h-full object-cover opacity-40"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+
+      <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-8 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.5em] text-white/40 mb-4 block text-center">
+            Precision Sound, Built With Intent
+          </span>
+          <h1 className="text-5xl sm:text-7xl md:text-9xl font-sans font-bold tracking-tighter leading-[0.9] mb-8 text-center">
+            THE <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/20">OBSIDIAN</span> <br />
+            MONOLITH
+          </h1>
+          <p className="max-w-xl mx-auto text-sm md:text-lg text-white/60 font-light leading-relaxed mb-12 text-center px-4">
+            A flagship listening system shaped for studios, private rooms, and performance spaces that demand clarity, depth, and presence.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6">
+            <a
+              href="#contact"
+              className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/90 transition-all flex items-center justify-center gap-2"
+            >
+              Inquire Now <ArrowRight className="w-4 h-4" />
+            </a>
+            <button
+              type="button"
+              onClick={() => setIsVideoOpen(true)}
+              className="w-full sm:w-auto px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+            >
+              Watch Performance <Play className="w-4 h-4 fill-current" />
+            </button>
+          </div>
+        </motion.div>
+      </div>
+
+      {isVideoOpen ? (
+        <div className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+          <div className="relative w-full max-w-md aspect-[9/16] bg-black border border-white/10 rounded-2xl overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/a3aDBQvahB4?autoplay=1&rel=0"
+              title="Hero Performance Video"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+            <button
+              type="button"
+              onClick={() => setIsVideoOpen(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full border border-white/20 bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+              aria-label="Close video"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </motion.div>
-    </div>
+      ) : null}
 
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
-    >
-      <div className="w-px h-8 md:h-12 bg-gradient-to-b from-white/0 to-white/40" />
-      <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">Scroll</span>
-    </motion.div>
-  </section>
-);
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 1 }}
+        className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+      >
+        <div className="w-px h-8 md:h-12 bg-gradient-to-b from-white/0 to-white/40" />
+        <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">Scroll</span>
+      </motion.div>
+    </section>
+  );
+};
 
 const SoundProfile = () => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
