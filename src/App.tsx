@@ -644,9 +644,13 @@ const Contact = ({
                 <Mail className="w-5 h-5 shrink-0" />
                 <span className="text-sm">concierge@audiowerkhaus.audio</span>
               </div>
-              <div className="flex items-center gap-4 text-white/60">
+              <div className="flex items-start gap-4 text-white/60">
                 <Phone className="w-5 h-5 shrink-0" />
-                <span className="text-sm">+1 (888) WERKHAUS</span>
+                <div className="space-y-1 text-sm">
+                  <div>Germany: +49 178 3640921</div>
+                  <div>Korea: +82 10 5557 0582</div>
+                  <div>USA: +1 669 362 1974</div>
+                </div>
               </div>
               <div className="flex items-center gap-4 text-white/60">
                 <MapPin className="w-5 h-5 shrink-0" />
