@@ -11,7 +11,6 @@ import {
   MapPin,
   ArrowRight,
   Play,
-  Pause,
   ImagePlus,
   Pencil,
   Trash2,
@@ -303,9 +302,14 @@ const Hero = () => (
           >
             Inquire Now <ArrowRight className="w-4 h-4" />
           </a>
-          <button className="w-full sm:w-auto px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+          <a
+            href="https://youtube.com/shorts/a3aDBQvahB4?si=3Coio0bBOLSRJPrx"
+            target="_blank"
+            rel="noreferrer"
+            className="w-full sm:w-auto px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-sm hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+          >
             Watch Performance <Play className="w-4 h-4 fill-current" />
-          </button>
+          </a>
         </div>
       </motion.div>
     </div>
@@ -323,8 +327,6 @@ const Hero = () => (
 );
 
 const SoundProfile = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
   return (
     <section id="sound" className="py-20 md:py-32 bg-black relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-8">
@@ -381,7 +383,12 @@ const SoundProfile = () => {
             transition={{ duration: 0.8 }}
             className="relative aspect-square max-w-lg mx-auto w-full"
           >
-            <div className="absolute inset-0 border border-white/5 rounded-3xl overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(!isPlaying)}>
+            <a
+              href="https://youtube.com/shorts/UJ-IIrzFzJI?si=sO4VMyhEdIcVYCcF"
+              target="_blank"
+              rel="noreferrer"
+              className="absolute inset-0 border border-white/5 rounded-3xl overflow-hidden group cursor-pointer block"
+            >
               <img
                 src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=1000"
                 alt="Sound Wave"
@@ -390,19 +397,19 @@ const SoundProfile = () => {
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <div className="w-16 h-16 md:w-24 md:h-24 rounded-full border border-white/20 flex items-center justify-center backdrop-blur-sm group-hover:border-white/50 transition-colors">
-                  {isPlaying ? <Pause className="w-6 h-6 md:w-8 md:h-8 fill-white" /> : <Play className="w-6 h-6 md:w-8 md:h-8 fill-white ml-1 md:ml-2" />}
+                  <Play className="w-6 h-6 md:w-8 md:h-8 fill-white ml-1 md:ml-2" />
                 </div>
               </div>
               <div className="absolute bottom-6 md:bottom-8 left-6 md:left-8 right-6 md:right-8">
                 <div className="flex items-end justify-between mb-2">
-                  <span className="text-[8px] md:text-[10px] font-mono uppercase tracking-widest text-white/60">Audio Sample 01</span>
-                  <span className="text-[8px] md:text-[10px] font-mono text-white/40">02:45 / 04:20</span>
+                  <span className="text-[8px] md:text-[10px] font-mono uppercase tracking-widest text-white/60">Performance Video</span>
+                  <span className="text-[8px] md:text-[10px] font-mono text-white/40">Watch on YouTube</span>
                 </div>
                 <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div className="h-full bg-white" animate={{ width: isPlaying ? '65%' : '0%' }} transition={{ duration: 2, ease: 'linear' }} />
+                  <div className="h-full bg-white w-full" />
                 </div>
               </div>
-            </div>
+            </a>
           </motion.div>
         </div>
       </div>
