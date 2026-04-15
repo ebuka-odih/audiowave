@@ -61,6 +61,7 @@ type SelectedProductPayload = {
 const DEFAULT_INTEREST = 'The Monolith';
 const FALLBACK_PRODUCT_IMAGE =
   'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=1200';
+const CONSULTATION_STORAGE_KEY = 'audiowave.consultationRequests';
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
@@ -135,13 +136,6 @@ const deleteProduct = async (id: string) => {
   if (!response.ok) throw new Error(await getErrorMessage(response));
 };
 
-const fetchConsultationRequests = async () => {
-  const response = await fetch('/api/consultation-requests');
-  if (!response.ok) throw new Error(await getErrorMessage(response));
-  const payload = (await response.json()) as { requests: ConsultationRequest[] };
-  return payload.requests;
-};
-
 const createConsultationRequest = async (request: ConsultationFormState) => {
   const response = await fetch('/api/consultation-requests', {
     method: 'POST',
@@ -153,22 +147,33 @@ const createConsultationRequest = async (request: ConsultationFormState) => {
   return payload.request;
 };
 
-const updateConsultationRequest = async (id: string, request: ConsultationFormState) => {
-  const response = await fetch(`/api/consultation-requests?id=${encodeURIComponent(id)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  });
-  if (!response.ok) throw new Error(await getErrorMessage(response));
-  const payload = (await response.json()) as { request: ConsultationRequest };
-  return payload.request;
+const readStoredConsultationRequests = () => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const rawValue = window.localStorage.getItem(CONSULTATION_STORAGE_KEY);
+    if (!rawValue) return [];
+
+    const parsed = JSON.parse(rawValue) as ConsultationRequest[];
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(
+      (request) =>
+        typeof request?.id === 'string' &&
+        typeof request?.name === 'string' &&
+        typeof request?.email === 'string' &&
+        typeof request?.interest === 'string' &&
+        typeof request?.message === 'string' &&
+        typeof request?.createdAt === 'string',
+    );
+  } catch {
+    return [];
+  }
 };
 
-const deleteConsultationRequest = async (id: string) => {
-  const response = await fetch(`/api/consultation-requests?id=${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) throw new Error(await getErrorMessage(response));
+const writeStoredConsultationRequests = (requests: ConsultationRequest[]) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(CONSULTATION_STORAGE_KEY, JSON.stringify(requests));
 };
 
 const isNotFoundRoute = (path: string) => {
@@ -556,6 +561,7 @@ const Contact = ({
   const [formState, setFormState] = useState<ConsultationFormState>(EMPTY_CONSULTATION_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!selectedProduct?.name) return;
@@ -579,6 +585,9 @@ const Contact = ({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     try {
       if (editingId) {
@@ -596,6 +605,8 @@ const Contact = ({
       setEditingId(null);
     } catch (error) {
       setStatusMessage(formatActionError(error, 'Unable to save consultation request.'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -707,8 +718,15 @@ const Contact = ({
 
               {statusMessage ? <p className="text-[10px] font-mono uppercase tracking-widest text-white/40">{statusMessage}</p> : null}
 
-              <button className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-white/90 transition-all">
-                {editingId ? 'Update Request' : 'Save Request'}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={cn(
+                  'w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm transition-all',
+                  isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:bg-white/90',
+                )}
+              >
+                {isSubmitting ? 'Sending...' : editingId ? 'Update Request' : 'Send Request'}
               </button>
             </form>
 
@@ -1090,24 +1108,19 @@ export default function App() {
     setProducts(nextProducts);
   };
 
-  const reloadRequests = async () => {
-    const nextRequests = await fetchConsultationRequests();
-    setRequests(nextRequests);
-  };
-
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
       try {
-        const [nextProducts, nextRequests] = await Promise.all([fetchProducts(), fetchConsultationRequests()]);
+        const nextProducts = await fetchProducts();
 
         if (!isMounted) return;
 
         if (nextProducts.length > 0) {
           setProducts(nextProducts);
         }
-        setRequests(nextRequests);
+        setRequests(readStoredConsultationRequests());
       } catch (error) {
         console.error(error);
       }
@@ -1139,18 +1152,30 @@ export default function App() {
   };
 
   const handleCreateRequest = async (request: ConsultationFormState) => {
-    await createConsultationRequest(request);
-    await reloadRequests();
+    const savedRequest = await createConsultationRequest(request);
+    setRequests((current) => {
+      const nextRequests = [savedRequest, ...current];
+      writeStoredConsultationRequests(nextRequests);
+      return nextRequests;
+    });
   };
 
   const handleUpdateRequest = async (id: string, request: ConsultationFormState) => {
-    await updateConsultationRequest(id, request);
-    await reloadRequests();
+    setRequests((current) => {
+      const nextRequests = current.map((storedRequest) =>
+        storedRequest.id === id ? { ...storedRequest, ...request } : storedRequest,
+      );
+      writeStoredConsultationRequests(nextRequests);
+      return nextRequests;
+    });
   };
 
   const handleDeleteRequest = async (id: string) => {
-    await deleteConsultationRequest(id);
-    await reloadRequests();
+    setRequests((current) => {
+      const nextRequests = current.filter((storedRequest) => storedRequest.id !== id);
+      writeStoredConsultationRequests(nextRequests);
+      return nextRequests;
+    });
   };
 
   if (pathname === '/admin') {

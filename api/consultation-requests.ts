@@ -53,13 +53,17 @@ export default async function handler(req: any, res: any) {
         [request.id, request.name, request.email, request.interest, request.message],
       );
 
-      await sendInquiryEmail({
-        name: request.name,
-        email: request.email,
-        interest: request.interest,
-        message: request.message,
-        createdAt: result.rows[0].createdAt,
-      });
+      try {
+        await sendInquiryEmail({
+          name: request.name,
+          email: request.email,
+          interest: request.interest,
+          message: request.message,
+          createdAt: result.rows[0].createdAt,
+        });
+      } catch (error) {
+        console.error('Failed to send inquiry email', error);
+      }
 
       return send(res, 201, { request: result.rows[0] });
     }
