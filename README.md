@@ -2,19 +2,31 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# AudioWave
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/65f09c60-1574-45b6-9d38-e533e9d67d04
+Prerequisite: Node.js
 
-## Run Locally
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local`.
+3. Set `GEMINI_API_KEY`, `DATABASE_URL`, and the Mailtrap SMTP values in `.env.local`.
+4. Run `npm run dev`.
 
-**Prerequisites:**  Node.js
+## Mailtrap SMTP
 
+The backend mailer accepts Mailtrap-specific env vars and falls back to generic SMTP vars.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Use these values in `.env.local`:
+
+```env
+MAILTRAP_HOST=live.smtp.mailtrap.io
+MAILTRAP_PORT=2525
+MAILTRAP_SECURE=false
+MAILTRAP_USER=api
+MAILTRAP_TOKEN=your-mailtrap-smtp-password-or-token
+SMTP_FROM="AudioWerkhaus <noreply@audiowerkhaus.com>"
+ADMIN_EMAIL=concierge@audiowerkhaus.audio
+```
+
+If you prefer, you can still use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` instead.

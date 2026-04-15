@@ -1,4 +1,5 @@
 import { ensureSchema, getPool } from './_db.js';
+import { sendInquiryEmail } from './_mail.js';
 
 const parseBody = (req: any) => {
   if (!req.body) return {};
@@ -51,6 +52,14 @@ export default async function handler(req: any, res: any) {
          RETURNING id, name, email, interest, message, created_at AS "createdAt"`,
         [request.id, request.name, request.email, request.interest, request.message],
       );
+
+      await sendInquiryEmail({
+        name: request.name,
+        email: request.email,
+        interest: request.interest,
+        message: request.message,
+        createdAt: result.rows[0].createdAt,
+      });
 
       return send(res, 201, { request: result.rows[0] });
     }
