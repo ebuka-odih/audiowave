@@ -45,17 +45,39 @@ const getTransporter = () => {
   });
 };
 
-export const sendInquiryEmail = async (input: {
+const sendMail = async ({
+  to,
+  subject,
+  text,
+  html,
+  replyTo,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  replyTo?: string;
+}) => {
+  const from = firstDefined('MAILTRAP_FROM', 'SMTP_FROM') || required('SMTP_FROM');
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    replyTo,
+    subject,
+    text,
+    html,
+  });
+};
+
+const buildInquiryContent = (input: {
   name: string;
   email: string;
   interest: string;
   message: string;
   createdAt: string;
-}) => {
-  const from = firstDefined('MAILTRAP_FROM', 'SMTP_FROM') || required('SMTP_FROM');
-  const to = required('ADMIN_EMAIL');
-
-  const text = [
+}) => ({
+  text: [
     'A new AudioWerkhaus inquiry was submitted.',
     '',
     `Name: ${input.name}`,
@@ -65,9 +87,8 @@ export const sendInquiryEmail = async (input: {
     '',
     'Message:',
     input.message,
-  ].join('\n');
-
-  const html = `
+  ].join('\n'),
+  html: `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 16px;">New AudioWerkhaus inquiry</h2>
       <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
@@ -77,13 +98,64 @@ export const sendInquiryEmail = async (input: {
       <p><strong>Message:</strong></p>
       <p style="white-space: pre-wrap;">${escapeHtml(input.message)}</p>
     </div>
-  `;
+  `,
+});
 
-  await getTransporter().sendMail({
-    from,
-    to,
+export const sendInquiryEmail = async (input: {
+  name: string;
+  email: string;
+  interest: string;
+  message: string;
+  createdAt: string;
+}) => {
+  const content = buildInquiryContent(input);
+
+  await sendMail({
+    to: required('ADMIN_EMAIL'),
     replyTo: input.email,
     subject: `New AudioWerkhaus inquiry: ${input.interest}`,
+    text: content.text,
+    html: content.html,
+  });
+};
+
+export const sendInquiryConfirmationEmail = async (input: {
+  name: string;
+  email: string;
+  interest: string;
+  message: string;
+  createdAt: string;
+}) => {
+  const text = [
+    `Hi ${input.name},`,
+    '',
+    'We received your AudioWerkhaus inquiry and will follow up soon.',
+    '',
+    `Interest: ${input.interest}`,
+    `Submitted: ${input.createdAt}`,
+    '',
+    'Your message:',
+    input.message,
+    '',
+    'If you need to add more details, reply to this email or contact us at info@audiowerkhaus.com.',
+  ].join('\n');
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
+      <h2 style="margin-bottom: 16px;">We received your inquiry</h2>
+      <p>Hi ${escapeHtml(input.name)},</p>
+      <p>We received your AudioWerkhaus inquiry and will follow up soon.</p>
+      <p><strong>Interest:</strong> ${escapeHtml(input.interest)}</p>
+      <p><strong>Submitted:</strong> ${escapeHtml(input.createdAt)}</p>
+      <p><strong>Your message:</strong></p>
+      <p style="white-space: pre-wrap;">${escapeHtml(input.message)}</p>
+      <p>If you need to add more details, reply to this email or contact us at info@audiowerkhaus.com.</p>
+    </div>
+  `;
+
+  await sendMail({
+    to: input.email,
+    subject: 'Your AudioWerkhaus inquiry has been received',
     text,
     html,
   });

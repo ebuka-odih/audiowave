@@ -666,7 +666,7 @@ const Contact = ({
             <div className="space-y-6">
               <div className="flex items-center gap-4 text-white/60">
                 <Mail className="w-5 h-5 shrink-0" />
-                <span className="text-sm">concierge@audiowerkhaus.audio</span>
+                <span className="text-sm">info@audiowerkhaus.com</span>
               </div>
               <div className="flex items-start gap-4 text-white/60">
                 <Phone className="w-5 h-5 shrink-0" />

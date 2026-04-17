@@ -1,5 +1,5 @@
 import { ensureSchema, getPool } from './_db.js';
-import { sendInquiryEmail } from './_mail.js';
+import { sendInquiryConfirmationEmail, sendInquiryEmail } from './_mail.js';
 
 const parseBody = (req: any) => {
   if (!req.body) return {};
@@ -53,17 +53,25 @@ export default async function handler(req: any, res: any) {
         [request.id, request.name, request.email, request.interest, request.message],
       );
 
-      try {
-        await sendInquiryEmail({
-          name: request.name,
-          email: request.email,
-          interest: request.interest,
-          message: request.message,
-          createdAt: result.rows[0].createdAt,
-        });
-      } catch (error) {
-        console.error('Failed to send inquiry email', error);
-      }
+      const mailPayload = {
+        name: request.name,
+        email: request.email,
+        interest: request.interest,
+        message: request.message,
+        createdAt: result.rows[0].createdAt,
+      };
+
+      const deliveryResults = await Promise.allSettled([
+        sendInquiryEmail(mailPayload),
+        sendInquiryConfirmationEmail(mailPayload),
+      ]);
+
+      deliveryResults.forEach((deliveryResult, index) => {
+        if (deliveryResult.status === 'rejected') {
+          const recipient = index === 0 ? 'admin' : 'requester';
+          console.error(`Failed to send ${recipient} inquiry email`, deliveryResult.reason);
+        }
+      });
 
       return send(res, 201, { request: result.rows[0] });
     }

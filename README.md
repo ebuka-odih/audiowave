@@ -26,7 +26,7 @@ MAILTRAP_SECURE=false
 MAILTRAP_USER=api
 MAILTRAP_TOKEN=your-mailtrap-smtp-password-or-token
 SMTP_FROM="AudioWerkhaus <noreply@audiowerkhaus.com>"
-ADMIN_EMAIL=concierge@audiowerkhaus.audio
+ADMIN_EMAIL=info@audiowerkhaus.com
 ```
 
 If you prefer, you can still use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` instead.
