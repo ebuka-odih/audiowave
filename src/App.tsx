@@ -423,11 +423,40 @@ const SoundProfile = () => {
 const Catalog = ({
   products,
   onSelectProduct,
+  onCreate,
 }: {
   products: Product[];
   onSelectProduct: (productName: string) => void;
+  onCreate: (request: ConsultationFormState) => Promise<void>;
 }) => {
   const [selectedInstrument, setSelectedInstrument] = useState<string | null>(null);
+  const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  const handleInquirySubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setStatusMessage('');
+
+    try {
+      const productName = products.find((p) => p.id === selectedInstrument)?.name ?? '';
+      await onCreate({
+        name: inquiryForm.name,
+        email: inquiryForm.email,
+        interest: productName,
+        message: inquiryForm.message,
+      });
+      setStatusMessage('Inquiry sent! We\'ll be in touch soon.');
+      setInquiryForm({ name: '', email: '', message: '' });
+    } catch (error) {
+      setStatusMessage(formatActionError(error, 'Unable to send inquiry.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section id="catalog" className="py-20 md:py-32 bg-[#050505]">
@@ -497,7 +526,7 @@ const Catalog = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-xl"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-xl"
             onClick={() => setSelectedInstrument(null)}
           >
             <motion.div
@@ -518,23 +547,50 @@ const Catalog = ({
               </h2>
               <p className="text-white/40 text-sm mb-8">Share a few details and our team will follow up with availability, specifications, and next steps.</p>
 
-              <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
+              <form className="space-y-6" onSubmit={handleInquirySubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/40">Full Name</label>
-                    <input type="text" className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors" placeholder="John Doe" />
+                    <input
+                      type="text"
+                      required
+                      className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors"
+                      placeholder="John Doe"
+                      value={inquiryForm.name}
+                      onChange={(e) => setInquiryForm((f) => ({ ...f, name: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/40">Email Address</label>
-                    <input type="email" className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors" placeholder="john@example.com" />
+                    <input
+                      type="email"
+                      required
+                      className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors"
+                      placeholder="john@example.com"
+                      value={inquiryForm.email}
+                      onChange={(e) => setInquiryForm((f) => ({ ...f, email: e.target.value }))}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-mono tracking-widest text-white/40">Message / Requirements</label>
-                  <textarea className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors h-24 md:h-32 resize-none" placeholder="Tell us about your project, room, or performance space..." />
+                  <textarea
+                    required
+                    className="w-full bg-black border border-white/10 p-4 text-sm focus:border-white/40 outline-none transition-colors h-24 md:h-32 resize-none"
+                    placeholder="Tell us about your project, room, or performance space..."
+                    value={inquiryForm.message}
+                    onChange={(e) => setInquiryForm((f) => ({ ...f, message: e.target.value }))}
+                  />
                 </div>
-                <button className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-white/90 transition-all">
-                  Send Inquiry
+                {statusMessage && (
+                  <p className="text-xs font-mono text-white/60">{statusMessage}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Inquiry'}
                 </button>
               </form>
             </motion.div>
@@ -547,19 +603,12 @@ const Catalog = ({
 
 const Contact = ({
   selectedProduct,
-  requests,
   onCreate,
-  onUpdate,
-  onDelete,
 }: {
   selectedProduct: SelectedProductPayload | null;
-  requests: ConsultationRequest[];
   onCreate: (request: ConsultationFormState) => Promise<void>;
-  onUpdate: (id: string, request: ConsultationFormState) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
 }) => {
   const [formState, setFormState] = useState<ConsultationFormState>(EMPTY_CONSULTATION_FORM);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -590,52 +639,16 @@ const Contact = ({
     setIsSubmitting(true);
 
     try {
-      if (editingId) {
-        await onUpdate(editingId, formState);
-        setStatusMessage('Consultation request updated.');
-      } else {
-        await onCreate(formState);
-        setStatusMessage('Consultation request sent.');
-      }
-
+      await onCreate(formState);
+      setStatusMessage('Consultation request sent.');
       setFormState({
         ...EMPTY_CONSULTATION_FORM,
         interest: selectedProduct?.name || DEFAULT_INTEREST,
       });
-      setEditingId(null);
     } catch (error) {
       setStatusMessage(formatActionError(error, 'Unable to save consultation request.'));
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleEdit = (request: ConsultationRequest) => {
-    setEditingId(request.id);
-    setFormState({
-      name: request.name,
-      email: request.email,
-      interest: request.interest,
-      message: request.message,
-    });
-    setStatusMessage(`Editing request for ${request.interest}.`);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await onDelete(id);
-
-      if (editingId === id) {
-        setEditingId(null);
-        setFormState({
-          ...EMPTY_CONSULTATION_FORM,
-          interest: selectedProduct?.name || DEFAULT_INTEREST,
-        });
-      }
-
-      setStatusMessage('Consultation request deleted.');
-    } catch (error) {
-      setStatusMessage(formatActionError(error, 'Unable to delete consultation request.'));
     }
   };
 
@@ -726,57 +739,9 @@ const Contact = ({
                   isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:bg-white/90',
                 )}
               >
-                {isSubmitting ? 'Sending...' : editingId ? 'Update Request' : 'Send Request'}
+                {isSubmitting ? 'Sending...' : 'Send Request'}
               </button>
             </form>
-
-            <div className="mt-10 pt-8 border-t border-white/5 space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-white/30">Saved Requests</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-white/20">{requests.length} stored locally</span>
-              </div>
-
-              {requests.length === 0 ? (
-                <p className="text-sm text-white/40 leading-relaxed">
-                  No consultation requests saved yet. Submit the form above to create the first one.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {requests.map((request) => (
-                    <div key={request.id} className="border border-white/5 bg-black/30 p-4 rounded-sm">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-white">{request.interest}</p>
-                          <p className="text-xs text-white/50">
-                            {request.name} · {request.email}
-                          </p>
-                        </div>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-white/20">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm text-white/40 leading-relaxed">{request.message}</p>
-                      <div className="mt-4 flex gap-3">
-                        <button
-                          type="button"
-                          className="text-[10px] uppercase font-bold tracking-widest text-white/70 hover:text-white transition-colors"
-                          onClick={() => handleEdit(request)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="text-[10px] uppercase font-bold tracking-widest text-white/30 hover:text-white/70 transition-colors"
-                          onClick={() => handleDelete(request.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -1059,16 +1024,10 @@ const Footer = () => (
 
 const PublicSite = ({
   products,
-  requests,
   onCreateRequest,
-  onUpdateRequest,
-  onDeleteRequest,
 }: {
   products: Product[];
-  requests: ConsultationRequest[];
   onCreateRequest: (request: ConsultationFormState) => Promise<void>;
-  onUpdateRequest: (id: string, request: ConsultationFormState) => Promise<void>;
-  onDeleteRequest: (id: string) => Promise<void>;
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<SelectedProductPayload | null>(null);
 
@@ -1085,14 +1044,8 @@ const PublicSite = ({
       <Navbar isAdmin={false} />
       <Hero />
       <SoundProfile />
-      <Catalog products={products} onSelectProduct={handleSelectProduct} />
-      <Contact
-        selectedProduct={selectedProduct}
-        requests={requests}
-        onCreate={onCreateRequest}
-        onUpdate={onUpdateRequest}
-        onDelete={onDeleteRequest}
-      />
+      <Catalog products={products} onSelectProduct={handleSelectProduct} onCreate={onCreateRequest} />
+      <Contact selectedProduct={selectedProduct} onCreate={onCreateRequest} />
       <Footer />
     </div>
   );
@@ -1101,7 +1054,6 @@ const PublicSite = ({
 export default function App() {
   const [pathname, setPathname] = useState(readUrlPath());
   const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
-  const [requests, setRequests] = useState<ConsultationRequest[]>([]);
 
   const reloadProducts = async () => {
     const nextProducts = await fetchProducts();
@@ -1120,7 +1072,6 @@ export default function App() {
         if (nextProducts.length > 0) {
           setProducts(nextProducts);
         }
-        setRequests(readStoredConsultationRequests());
       } catch (error) {
         console.error(error);
       }
@@ -1152,30 +1103,7 @@ export default function App() {
   };
 
   const handleCreateRequest = async (request: ConsultationFormState) => {
-    const savedRequest = await createConsultationRequest(request);
-    setRequests((current) => {
-      const nextRequests = [savedRequest, ...current];
-      writeStoredConsultationRequests(nextRequests);
-      return nextRequests;
-    });
-  };
-
-  const handleUpdateRequest = async (id: string, request: ConsultationFormState) => {
-    setRequests((current) => {
-      const nextRequests = current.map((storedRequest) =>
-        storedRequest.id === id ? { ...storedRequest, ...request } : storedRequest,
-      );
-      writeStoredConsultationRequests(nextRequests);
-      return nextRequests;
-    });
-  };
-
-  const handleDeleteRequest = async (id: string) => {
-    setRequests((current) => {
-      const nextRequests = current.filter((storedRequest) => storedRequest.id !== id);
-      writeStoredConsultationRequests(nextRequests);
-      return nextRequests;
-    });
+    await createConsultationRequest(request);
   };
 
   if (pathname === '/admin') {
@@ -1192,10 +1120,7 @@ export default function App() {
   return (
     <PublicSite
       products={products}
-      requests={requests}
       onCreateRequest={handleCreateRequest}
-      onUpdateRequest={handleUpdateRequest}
-      onDeleteRequest={handleDeleteRequest}
     />
   );
 }
