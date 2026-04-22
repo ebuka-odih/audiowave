@@ -1,32 +1,32 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# AudioWerkhaus Laravel
 
-# AudioWave
+This repository now runs the AudioWerkhaus site on Laravel.
 
-## Run locally
+## What changed
 
-Prerequisite: Node.js
+- The public site and admin UI still live in the existing React app under `src/`.
+- Laravel now serves the app shell, handles product CRUD, stores consultation requests, and sends email.
+- The API contract remains the same:
+  - `GET /api/products`
+  - `POST /api/products`
+  - `PUT /api/products?id=...`
+  - `DELETE /api/products?id=...`
+  - `GET /api/consultation-requests`
+  - `POST /api/consultation-requests`
+  - `PUT /api/consultation-requests?id=...`
+  - `DELETE /api/consultation-requests?id=...`
 
-1. Install dependencies with `npm install`.
-2. Copy `.env.example` to `.env.local`.
-3. Set `GEMINI_API_KEY`, `DATABASE_URL`, and the Mailtrap SMTP values in `.env.local`.
-4. Run `npm run dev`.
+## Local setup
 
-## Mailtrap SMTP
+1. Copy `.env.example` to `.env` if needed.
+2. Set your database and mail credentials in `.env`.
+3. Run `composer install`.
+4. Run `npm install`.
+5. Run migrations with `php artisan migrate`.
+6. Start the app with `php artisan serve` and `npm run dev` in separate terminals.
 
-The backend mailer accepts Mailtrap-specific env vars and falls back to generic SMTP vars.
+## Notes
 
-Use these values in `.env.local`:
-
-```env
-MAILTRAP_HOST=live.smtp.mailtrap.io
-MAILTRAP_PORT=2525
-MAILTRAP_SECURE=false
-MAILTRAP_USER=api
-MAILTRAP_TOKEN=your-mailtrap-smtp-password-or-token
-SMTP_FROM="AudioWerkhaus <noreply@audiowerkhaus.com>"
-ADMIN_EMAIL=info@audiowerkhaus.com
-```
-
-If you prefer, you can still use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` instead.
+- Product images are still accepted the same way as before: the admin upload preview is turned into an image payload and stored in the database.
+- Consultation emails use Laravel mailables and the `ADMIN_EMAIL` address from `.env`.
+- If you use a fresh checkout, generate an app key with `php artisan key:generate`.
