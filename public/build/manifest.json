@@ -1,0 +1,16 @@
+{
+  "src/index.css": {
+    "file": "assets/index-CGGfKG-S.css",
+    "src": "src/index.css",
+    "isEntry": true
+  },
+  "src/main.tsx": {
+    "file": "assets/main-AHH6Dk6Q.js",
+    "name": "main",
+    "src": "src/main.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/index-CGGfKG-S.css"
+    ]
+  }
+}
