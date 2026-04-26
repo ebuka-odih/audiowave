@@ -121,6 +121,6 @@ return [
         'name' => env('MAIL_FROM_NAME', env('SMTP_FROM_NAME', 'Example')),
     ],
 
-    'admin_email' => env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+    'admin_email' => env('ADMIN_EMAIL', 'admin@audiowerkhaus.com'),
 
 ];

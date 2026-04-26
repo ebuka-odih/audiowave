@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class InquiryReceivedMail extends Mailable
@@ -20,6 +21,9 @@ class InquiryReceivedMail extends Mailable
     {
         return new Envelope(
             subject: 'New AudioWerkhaus inquiry: '.$this->payload['interest'],
+            replyTo: [
+                new Address($this->payload['email'], $this->payload['name']),
+            ],
         );
     }
 
